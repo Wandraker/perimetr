@@ -1,0 +1,1 @@
+-keep class com.perimetr.guard.vpn.TProxyService { *; }

@@ -1,0 +1,44 @@
+Copyright (c) 2026 Wandraker. Все права защищены. All rights reserved.
+
+Периметр (далее — «Программа») и её исходный код являются собственностью
+правообладателя.
+
+Исходный код опубликован для того, чтобы любой мог проверить, что делает
+Программа. Разрешается:
+  - просматривать исходный код;
+  - собирать Программу из исходного кода для проверки и личного использования
+    на своих устройствах.
+
+Без предварительного письменного разрешения правообладателя запрещается:
+  - распространять Программу или её части, в том числе собранные из этого кода
+    APK-файлы;
+  - публиковать изменённые версии Программы;
+  - использовать исходный код или его части в других продуктах;
+  - продавать, сдавать в аренду или сублицензировать Программу.
+
+Официальные сборки распространяются только через страницу Releases этого
+репозитория и сайт https://wandraker.github.io/perimetr/.
+
+Программа предоставляется «как есть», без каких-либо гарантий. Правообладатель
+не несёт ответственности за любой ущерб, возникший в связи с использованием
+Программы.
+
+Сторонние компоненты (hev-socks5-tunnel, hev-task-system, lwIP, libyaml)
+распространяются на условиях их собственных лицензий, тексты которых находятся
+в android/app/src/main/assets/third_party_licenses.txt. Настоящая лицензия на
+них не распространяется.
+
+----------------------------------------------------------------------------
+
+Copyright (c) 2026 Wandraker. All rights reserved.
+
+The source code is published so that anyone can verify what the Program does.
+You may view the source code and build the Program for verification and
+personal use on your own devices. Without prior written permission you may not
+distribute the Program or builds of it, publish modified versions, reuse the
+code in other products, or sell or sublicense the Program.
+
+Third-party components are licensed under their own terms; see
+android/app/src/main/assets/third_party_licenses.txt.
+
+THE PROGRAM IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

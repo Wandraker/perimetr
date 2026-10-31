@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Периметр</title>
+<meta name="description" content="Периметр — бесплатное приложение для Android, исходный код открыт для проверки. Показывает, к каким серверам ходят приложения, кто отправляет данные по ночам и у кого есть доступ к фото, экрану и SMS. Без root.">
+<meta name="theme-color" content="#0B0F17">
+<meta property="og:title" content="Периметр — видно, кто сливает данные с телефона">
+<meta property="og:description" content="Монитор трафика, автоблок трекеров, ночная активность, аудит доступов. Android, без root, код открыт для проверки.">
+<meta property="og:image" content="og.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#0B0F17;
+  --bg-2:#0E1520;
+  --surface:#131A26;
+  --surface-2:#1B2535;
+  --line:#26324A;
+  --fg:#E8EEF7;
+  --muted:#8A99B3;
+  --faint:#5C6B84;
+  --accent:#2FE6C4;
+  --accent-dim:#16413C;
+  --ok:#3DDC84;
+  --warn:#FFB84D;
+  --crit:#FF5E6C;
+  --crit-dim:#3A1620;
+  --ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --wrap:1120px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--mono)}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.02em}
+p{margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+.nav{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .2s}
+.nav.scrolled{border-bottom-color:var(--line)}
+.nav-in{display:flex;align-items:center;gap:14px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:18px;letter-spacing:-.02em}
+.brand svg{width:28px;height:28px}
+.nav-links{display:flex;gap:4px;margin-left:auto;align-items:center}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:14px;font-weight:600;padding:8px 12px;border-radius:10px;transition:color .15s,background .15s}
+.nav-links a:hover{color:var(--fg);background:var(--surface)}
+.nav-cta{background:var(--accent)!important;color:var(--bg)!important}
+.nav-cta:hover{filter:brightness(1.08)}
+@media (max-width:760px){.nav-links a:not(.nav-cta):not(.gh){display:none}}
+
+.hero{position:relative;padding:72px 0 56px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto;height:720px;background:radial-gradient(600px 380px at 70% 30%,rgba(47,230,196,.13),transparent 70%),radial-gradient(700px 420px at 20% 0%,rgba(22,38,58,.9),transparent 70%);pointer-events:none}
+.hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
+.hero-grid>*{min-width:0}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--accent);background:var(--accent-dim);border:1px solid rgba(47,230,196,.25);padding:6px 12px;border-radius:999px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(47,230,196,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,230,196,.55)}70%{box-shadow:0 0 0 9px rgba(47,230,196,0)}100%{box-shadow:0 0 0 0 rgba(47,230,196,0)}}
+.hero h1{font-size:clamp(38px,6vw,64px);line-height:1.03;font-weight:800;margin:20px 0 18px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:clamp(16px,1.6vw,18.5px);color:var(--muted);max-width:34em}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;font-size:16px;padding:15px 22px;border-radius:14px;border:1px solid transparent;transition:transform .15s,filter .15s,background .15s,border-color .15s;cursor:pointer}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:var(--bg);box-shadow:0 10px 30px -12px rgba(47,230,196,.6)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--fg)}
+.btn-ghost:hover{border-color:var(--faint)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn small{font-family:var(--mono);font-weight:500;font-size:12px;opacity:.75}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;font-family:var(--mono);font-size:12.5px;color:var(--faint)}
+.meta-row span{display:inline-flex;align-items:center;gap:7px}
+.meta-row b{color:var(--muted);font-weight:500}
+
+.phone-stage{position:relative;display:flex;justify-content:center}
+.phone-stage::before{content:"";position:absolute;width:420px;height:420px;max-width:100%;border-radius:50%;border:1px solid rgba(47,230,196,.12);top:50%;left:50%;transform:translate(-50%,-50%)}
+.phone-stage::after{content:"";position:absolute;width:540px;height:540px;max-width:120%;border-radius:50%;border:1px dashed rgba(47,230,196,.08);top:50%;left:50%;transform:translate(-50%,-50%)}
+.phone{position:relative;z-index:1;width:min(340px,100%);aspect-ratio:9/18.5;background:var(--bg);border-radius:42px;border:1px solid #2A3550;box-shadow:0 0 0 7px #121926,0 0 0 8px #2A3550,0 40px 80px -30px rgba(0,0,0,.8),0 0 120px -40px rgba(47,230,196,.35);overflow:hidden;display:flex;flex-direction:column}
+.ph-status{display:flex;justify-content:space-between;align-items:center;padding:14px 24px 6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.ph-top{display:flex;align-items:center;gap:8px;padding:8px 16px 12px;border-bottom:1px solid var(--line)}
+.ph-top b{font-size:15px;font-weight:800}
+.pill{font-size:9.5px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.p-ok{color:var(--ok);background:rgba(61,220,132,.14)}
+.p-warn{color:var(--warn);background:rgba(255,184,77,.15)}
+.p-crit{color:var(--crit);background:var(--crit-dim)}
+.p-cut{color:var(--ok);background:rgba(61,220,132,.12)}
+.ph-top .pill{margin-left:auto}
+.ph-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:12px 12px 6px}
+.ph-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
+.ph-stat b{display:block;font-family:var(--mono);font-size:17px;line-height:1.2}
+.ph-stat span{font-size:9px;color:var(--muted);line-height:1.2;display:block}
+.ph-label{display:flex;justify-content:space-between;padding:8px 16px 6px;font-size:11px;font-weight:700;color:var(--muted)}
+.ph-label span{font-family:var(--mono);font-weight:400;color:var(--faint)}
+.feed{flex:1;overflow:hidden;padding:0 12px;position:relative;-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+.row{display:flex;align-items:center;gap:9px;padding:9px 10px;margin-bottom:7px;background:var(--surface);border:1px solid var(--line);border-radius:13px;animation:slide .5s cubic-bezier(.2,.8,.2,1)}
+.row.crit{border-color:rgba(255,94,108,.4);background:linear-gradient(180deg,var(--crit-dim),var(--surface))}
+@keyframes slide{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.ico{width:28px;height:28px;border-radius:8px;flex:none;display:grid;place-items:center;font-weight:800;font-size:12px;color:var(--bg)}
+.row-main{min-width:0;flex:1}
+.row-app{font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-dom{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.cut .row-dom{text-decoration:line-through;text-decoration-color:rgba(61,220,132,.6)}
+.ph-nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface);padding:8px 6px 14px}
+.ph-nav span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:600;color:var(--faint)}
+.ph-nav span.on{color:var(--accent)}
+.ph-nav i{display:block;width:18px;height:18px;border-radius:6px;background:currentColor;opacity:.85;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+
+section{padding:88px 0;position:relative}
+.sec-head{max-width:720px;margin-bottom:44px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.sec-head h2{font-size:clamp(28px,4vw,44px);line-height:1.1;font-weight:800}
+.sec-head p{color:var(--muted);margin-top:16px;font-size:17px;max-width:40em}
+
+.threats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.threat{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px}
+.threat .num{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--warn);line-height:1}
+.threat h3{font-size:19px;margin:16px 0 8px}
+.threat p{color:var(--muted);font-size:15px}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s,transform .2s}
+.feat:hover{border-color:rgba(47,230,196,.35);transform:translateY(-2px)}
+.feat-ico{width:46px;height:46px;border-radius:14px;background:var(--accent-dim);display:grid;place-items:center;color:var(--accent)}
+.feat-ico svg{width:24px;height:24px}
+.feat h3{font-size:18px}
+.feat p{color:var(--muted);font-size:15px}
+.feat .tag{align-self:flex-start;font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-dim);padding:3px 9px;border-radius:999px}
+.feat.wide{grid-column:span 3;flex-direction:row;align-items:center;gap:24px;background:linear-gradient(120deg,rgba(47,230,196,.09),var(--surface) 55%)}
+.feat.wide .txt{flex:1;display:flex;flex-direction:column;gap:10px}
+
+.how{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;overflow-x:auto}
+.diagram svg{width:100%;min-width:440px;height:auto;display:block}
+.facts{display:flex;flex-direction:column;gap:12px}
+.fact{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.fact .mark{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px}
+.mark.y{background:rgba(61,220,132,.14);color:var(--ok)}
+.mark.n{background:var(--crit-dim);color:var(--crit)}
+.fact b{display:block;font-size:16px;margin-bottom:2px}
+.fact span{color:var(--muted);font-size:14.5px}
+
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:s}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 18px;counter-increment:s;position:relative}
+.step::before{content:counter(s);font-family:var(--mono);font-size:13px;color:var(--bg);background:var(--accent);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:600;margin-bottom:14px}
+.step h3{font-size:16px;margin-bottom:6px}
+.step p{color:var(--muted);font-size:14px}
+.step code{font-family:var(--mono);font-size:12.5px;color:var(--fg);background:var(--surface-2);padding:1px 6px;border-radius:6px}
+.tips{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.tip{border:1px dashed var(--line);border-radius:20px;padding:22px}
+.tip h3{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.tip ul{margin:0;padding-left:20px;color:var(--muted);font-size:14.5px;display:flex;flex-direction:column;gap:6px}
+
+.byedpi{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;background:linear-gradient(135deg,#102230,var(--surface) 60%);border:1px solid var(--line);border-radius:28px;padding:40px}
+.byedpi h2{font-size:clamp(26px,3.4vw,38px);line-height:1.1;font-weight:800;margin-bottom:14px}
+.byedpi p{color:var(--muted)}
+.byedpi ol{margin:18px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:8px;color:var(--fg)}
+.byedpi ol li::marker{color:var(--accent);font-family:var(--mono)}
+.flow{display:flex;flex-direction:column;gap:10px;font-family:var(--mono);font-size:13px}
+.flow div{display:flex;align-items:center;gap:12px;background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.flow div.me{border-color:rgba(47,230,196,.45);color:var(--accent)}
+.flow .arr{border:none;background:none;padding:0 0 0 22px;color:var(--faint)}
+
+.faq{display:flex;flex-direction:column;gap:10px;max-width:820px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:0 22px;transition:border-color .2s}
+details[open]{border-color:rgba(47,230,196,.3)}
+summary{list-style:none;cursor:pointer;padding:20px 0;font-weight:700;font-size:16.5px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);font-size:22px;color:var(--accent);transition:transform .2s;flex:none}
+details[open] summary::after{transform:rotate(45deg)}
+details p{color:var(--muted);padding:0 0 20px;font-size:15px}
+
+.log{display:flex;flex-direction:column;gap:0;max-width:820px;border-left:1px solid var(--line);margin-left:6px}
+.log-item{position:relative;padding:0 0 28px 28px}
+.log-item::before{content:"";position:absolute;left:-6px;top:6px;width:11px;height:11px;border-radius:50%;background:var(--surface-2);border:2px solid var(--faint)}
+.log-item:first-child::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 5px rgba(47,230,196,.15)}
+.log-item h3{font-family:var(--mono);font-size:15px;font-weight:600;display:flex;gap:10px;align-items:center}
+.log-item ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:4px}
+
+.final{text-align:center;padding:96px 0}
+.final h2{font-size:clamp(30px,4.6vw,52px);font-weight:800;line-height:1.08;margin-bottom:16px}
+.final p{color:var(--muted);max-width:34em;margin:0 auto}
+.final .cta-row{justify-content:center}
+
+footer{border-top:1px solid var(--line);padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));color:var(--faint);font-size:14px}
+.foot{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between}
+.foot nav{display:flex;flex-wrap:wrap;gap:8px 20px}
+.foot a{color:var(--muted);text-decoration:none}
+.foot a:hover{color:var(--fg)}
+
+.reveal{transform:none;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.js .reveal.pending{transform:translateY(14px)}
+
+@media (max-width:980px){
+  .hero-grid{grid-template-columns:minmax(0,1fr);gap:48px}
+  .threats,.features{grid-template-columns:1fr 1fr}
+  .feat.wide{grid-column:span 2}
+  .how,.byedpi{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  section{padding:64px 0}
+  .hero{padding:44px 0 32px}
+  .threats,.features,.tips,.steps{grid-template-columns:1fr}
+  .feat.wide{grid-column:auto;flex-direction:column;align-items:flex-start}
+  .byedpi{padding:26px}
+  .btn{width:100%}
+  .phone{width:min(310px,100%)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="Периметр">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 L52 14 L52 29 C52 43 43 52 32 58 C21 52 12 43 12 29 L12 14 Z" fill="#16413C" stroke="#2FE6C4" stroke-width="4" stroke-linejoin="round"/><path d="M23 31 L30 38 L42 25" fill="none" stroke="#2FE6C4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Периметр
+    </a>
+    <nav class="nav-links" aria-label="Разделы">
+      <a href="#features">Возможности</a>
+      <a href="#install">Установка</a>
+      <a href="#byedpi">ByeDPI</a>
+      <a href="#faq">Вопросы</a>
+      <a class="gh" href="#" data-repo-link aria-label="Исходный код на GitHub">GitHub</a>
+      <a class="nav-cta" href="#" data-download>Скачать</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Android · без root · код на GitHub</span>
+        <h1>Видно, кто <em>сливает</em> твои данные</h1>
+        <p class="lead">Периметр показывает, к каким серверам ходят приложения на телефоне, кто отправляет мегабайты по ночам, пока ты спишь, и у кого есть доступ к фото, экрану и SMS. Подозрительное блокируется одной кнопкой.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#" data-download>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Скачать APK <small data-version>v0.5.2</small>
+          </a>
+          <a class="btn btn-ghost" href="#" data-repo-link>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.38.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+            Исходный код
+          </a>
+        </div>
+        <div class="meta-row">
+          <span>Android <b>10+</b></span>
+          <span>Версия <b data-version>0.5.2</b></span>
+          <span>Размер <b>~3,5 МБ</b></span>
+          <span>Цена <b>бесплатно</b></span>
+        </div>
+      </div>
+
+      <div class="phone-stage" aria-label="Пример экрана монитора трафика">
+        <div class="phone">
+          <div class="ph-status"><span>23:47</span><span>VPN · 5G</span></div>
+          <div class="ph-top">
+            <svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 L52 14 L52 29 C52 43 43 52 32 58 C21 52 12 43 12 29 L12 14 Z" fill="#2FE6C4"/></svg>
+            <b>Монитор трафика</b>
+            <span class="pill p-ok">НА СТРАЖЕ</span>
+          </div>
+          <div class="ph-stats">
+            <div class="ph-stat"><b id="st-req" style="color:var(--fg)">1 284</b><span>запросов</span></div>
+            <div class="ph-stat"><b id="st-cut" style="color:var(--ok)">41</b><span>срезано</span></div>
+            <div class="ph-stat"><b style="color:var(--crit)">1</b><span>молодой домен</span></div>
+          </div>
+          <div class="ph-label">Сейчас <span>живой поток</span></div>
+          <div class="feed" id="feed"></div>
+          <div class="ph-nav">
+            <span style="--m:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z%22/></svg>')"><i></i>Щит</span>
+            <span class="on" style="--m:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M2 12h4l3-7 4 14 3-7h6v2h-4.6L13 23 9 9l-1.6 5H2z%22/></svg>')"><i></i>Монитор</span>
+            <span style="--m:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5zm-1 6v2h2V8zm0 4v6h2v-6z%22/></svg>')"><i></i>Доступы</span>
+            <span style="--m:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M6 10V8a6 6 0 1112 0v2h1v12H5V10zm2 0h8V8a4 4 0 10-8 0z%22/></svg>')"><i></i>Защита</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Почему это важно</div>
+        <h2>Разрешение, выданное год назад, работает до сих пор</h2>
+        <p>Ты один раз нажал «Разрешить», когда приложение попросило доступ, и забыл. А оно помнит. Вот три вещи, которых Android тебе не покажет.</p>
+      </div>
+      <div class="threats">
+        <article class="threat reveal">
+          <div class="num mono">все фото</div>
+          <h3>Скрытый альбом не скрыт</h3>
+          <p>Пароль или отпечаток на альбоме защищают от человека с телефоном в руках. Приложение с доступом «ко всем фото» читает скрытые альбомы как обычную папку. Зелёной точки, как у камеры, для этого нет.</p>
+        </article>
+        <article class="threat reveal">
+          <div class="num mono">02:00–05:00</div>
+          <h3>Выгрузка, пока ты спишь</h3>
+          <p>Экран выключен, телефон на зарядке, Wi-Fi быстрый. Лучшее время, чтобы тихо отправить гигабайт снимков на чужой сервер. Утром никаких следов.</p>
+        </article>
+        <article class="threat reveal">
+          <div class="num mono">экран</div>
+          <h3>Экран видят не только твои глаза</h3>
+          <p>Сервисы «Специальных возможностей» молча читают всё на экране, делают скриншоты и нажимают кнопки. Так работают банковские трояны. Обычная запись экрана тайно невозможна, а это — да.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Возможности</div>
+        <h2>Всё, что приложения делают за спиной, на одном экране</h2>
+      </div>
+      <div class="features">
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l3 7 4-14 3 7h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Монитор трафика</h3>
+          <p>Какое приложение, к какому серверу, когда и сколько раз обращалось. Поиск, фильтры, история за 7 дней. Заблокировать сервер или отрезать приложение от сети — одна кнопка.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M5.6 5.6l12.8 12.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <h3>Автоблок трекеров</h3>
+          <p>Аналитика и реклама Google, Яндекса (AppMetrica), VK, Facebook, AppsFlyer и других режется сразу, без вопросов. Приложения работают, слежка — нет.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <h3>Прошлая ночь</h3>
+          <p>Кто и сколько мегабайт отправил с 00:00 до 06:00. Тревога, если это приложение видит все фото или ходит на домен моложе 90 дней.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <h3>Аудит доступов</h3>
+          <p>Кто видит все фото, все файлы, камеру, микрофон, геолокацию, контакты и SMS. Кнопка «Изменить» ведёт прямо в настройки нужного приложения.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg></div>
+          <h3>Слежка за экраном</h3>
+          <p>Кто через «Специальные возможности» видит экран, кто читает уведомления, рисует поверх банка или стал администратором устройства. Тревога каждые 15 минут, если появился новый.</p>
+        </article>
+        <article class="feat reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <h3>Возраст доменов</h3>
+          <p>Сервер, зарегистрированный месяц назад, — частый признак слива. Периметр проверяет дату регистрации и подсвечивает молодые домены красным.</p>
+        </article>
+        <article class="feat wide reveal">
+          <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h12m0 0l-3-3m3 3l-3 3M20 16H8m0 0l3-3m-3 3l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="txt">
+            <h3>Работает вместе с ByeDPI</h3>
+            <p>Android держит только один VPN. Периметр умеет сам отправлять трафик в ByeDPI, поэтому работают оба: монитор следит, ByeDPI обходит блокировки.</p>
+          </div>
+          <span class="tag">бета</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Как это работает</div>
+        <h2>Локальный VPN, который никуда не ведёт</h2>
+        <p>Периметр запускает VPN прямо на телефоне. Через него проходят запросы «где находится сервер такой-то», и по ним видно, какое приложение куда ходит. Сам трафик идёт напрямую в интернет, без чужих серверов.</p>
+      </div>
+      <div class="how">
+        <div class="diagram reveal" role="img" aria-label="Схема: приложения отправляют запросы, Периметр на телефоне проверяет их, трекеры блокируются, остальное уходит в интернет">
+          <svg viewBox="0 0 520 300" fill="none">
+            <rect x="8" y="8" width="504" height="284" rx="22" stroke="#26324A" stroke-dasharray="5 6"/>
+            <text x="28" y="36" fill="#5C6B84" font-family="JetBrains Mono, monospace" font-size="11">ТВОЙ ТЕЛЕФОН</text>
+            <rect x="28" y="60" width="128" height="40" rx="11" fill="#1B2535" stroke="#26324A"/>
+            <text x="44" y="85" fill="#E8EEF7" font-family="Manrope, sans-serif" font-size="13" font-weight="700">Погода</text>
+            <rect x="28" y="112" width="128" height="40" rx="11" fill="#1B2535" stroke="#26324A"/>
+            <text x="44" y="137" fill="#E8EEF7" font-family="Manrope, sans-serif" font-size="13" font-weight="700">Клавиатура</text>
+            <rect x="28" y="164" width="128" height="40" rx="11" fill="#3A1620" stroke="#FF5E6C" stroke-opacity=".5"/>
+            <text x="44" y="189" fill="#E8EEF7" font-family="Manrope, sans-serif" font-size="13" font-weight="700">Очиститель</text>
+            <path d="M156 80 C 190 80, 190 140, 214 140" stroke="#5C6B84" stroke-width="1.6"/>
+            <path d="M156 132 C 186 132, 190 140, 214 140" stroke="#5C6B84" stroke-width="1.6"/>
+            <path d="M156 184 C 190 184, 190 140, 214 140" stroke="#FF5E6C" stroke-width="1.6"/>
+            <rect x="214" y="100" width="120" height="80" rx="16" fill="#16413C" stroke="#2FE6C4" stroke-width="1.6"/>
+            <text x="274" y="134" fill="#2FE6C4" font-family="Manrope, sans-serif" font-size="14" font-weight="800" text-anchor="middle">Периметр</text>
+            <text x="274" y="154" fill="#8A99B3" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">кто · куда · когда</text>
+            <path d="M334 128 H 380" stroke="#2FE6C4" stroke-width="1.8"/>
+            <path d="M374 122 L 382 128 L 374 134" stroke="#2FE6C4" stroke-width="1.8"/>
+            <path d="M334 160 C 352 160, 356 222, 380 222" stroke="#FF5E6C" stroke-width="1.6" stroke-dasharray="4 4"/>
+            <rect x="384" y="104" width="112" height="48" rx="12" fill="#1B2535" stroke="#26324A"/>
+            <text x="440" y="125" fill="#E8EEF7" font-family="Manrope, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Интернет</text>
+            <text x="440" y="142" fill="#5C6B84" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">напрямую</text>
+            <rect x="384" y="200" width="112" height="44" rx="12" fill="#3A1620" stroke="#FF5E6C" stroke-opacity=".6"/>
+            <text x="440" y="219" fill="#FF5E6C" font-family="Manrope, sans-serif" font-size="12.5" font-weight="800" text-anchor="middle">Заблокировано</text>
+            <text x="440" y="235" fill="#8A99B3" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="middle">трекеры · правила</text>
+            <text x="28" y="262" fill="#5C6B84" font-family="JetBrains Mono, monospace" font-size="10.5">история и правила хранятся только на телефоне</text>
+          </svg>
+        </div>
+        <div class="facts">
+          <div class="fact reveal"><span class="mark y">✓</span><div><b>Видит, куда и сколько</b><span>Какое приложение к какому серверу обращается, когда и сколько мегабайт отправляет.</span></div></div>
+          <div class="fact reveal"><span class="mark y">✓</span><div><b>Всё остаётся на телефоне</b><span>История, правила и списки приложений никуда не отправляются. Наружу уходят только имена доменов, если сам нажмёшь «Проверить возраст».</span></div></div>
+          <div class="fact reveal"><span class="mark y">✓</span><div><b>Не тормозит интернет</b><span>Через Периметр идут только запросы адресов, сами данные идут напрямую. Батарея почти не тратится.</span></div></div>
+          <div class="fact reveal"><span class="mark n">✕</span><div><b>Не читает содержимое</b><span>Трафик зашифрован, и это хорошо. Периметр знает, что приложение отправило 300 МБ на новый сервер, но не знает, что именно.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Установка</div>
+        <h2>Пять минут на настройку</h2>
+        <p>Периметр не из Play Маркета, поэтому Android задаст пару лишних вопросов. Это нормально.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><h3>Установи APK</h3><p>Скачай файл и открой. Разреши установку из этого источника, когда Android спросит.</p></div>
+        <div class="step reveal"><h3>Уведомления и фон</h3><p>Разреши уведомления и работу в фоне. Если Периметр продолжает просить, нажми <code>Уже разрешил</code>.</p></div>
+        <div class="step reveal"><h3>Статистика трафика</h3><p>На «Щите» нажми <code>Выдать</code>. Если увидишь «Доступ запрещён», смотри подсказку ниже.</p></div>
+        <div class="step reveal"><h3>Включи монитор</h3><p>Вкладка «Монитор». Android спросит про VPN: он локальный, данные не уходят с телефона.</p></div>
+        <div class="step reveal"><h3>Постоянная VPN</h3><p>Настройки → VPN → Периметр → <code>Постоянная VPN</code>. Монитор переживёт перезагрузку.</p></div>
+      </div>
+      <div class="tips">
+        <div class="tip reveal">
+          <h3><span class="pill p-warn">ANDROID 13+</span>«Доступ для приложения запрещён»</h3>
+          <ul>
+            <li>Настройки → Приложения → Периметр.</li>
+            <li>Нажми <b>⋮</b> в правом верхнем углу → «Разрешить ограниченные настройки».</li>
+            <li>Вернись в Периметр и снова нажми «Выдать».</li>
+          </ul>
+        </div>
+        <div class="tip reveal">
+          <h3><span class="pill p-warn">XIAOMI · REALME · OPPO</span>Чтобы монитор не выключался</h3>
+          <ul>
+            <li>Закрепи Периметр в недавних приложениях (замок на карточке).</li>
+            <li>Включи «Автозапуск» и разреши фоновую активность.</li>
+            <li>Разреши мобильный интернет в фоне.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="byedpi">
+    <div class="wrap">
+      <div class="byedpi reveal">
+        <div>
+          <div class="kicker">Совместимость · бета</div>
+          <h2>Периметр и ByeDPI одновременно</h2>
+          <p>Android держит только один VPN. Поэтому ByeDPI работает в режиме прокси, а Периметр сам отправляет в него трафик. Если ByeDPI остановится, Периметр переключится в обычный режим и вернётся, как только ByeDPI снова запустится. DNS в этом режиме идёт через DNS-over-HTTPS, поэтому провайдер не подменит ответы.</p>
+          <ol>
+            <li>В ByeDPI выбери режим «Прокси» (порт 1080) и запусти.</li>
+            <li>В Периметре: «Защита» → «Совместимость с ByeDPI».</li>
+            <li>Включи монитор трафика.</li>
+          </ol>
+        </div>
+        <div class="flow" aria-label="Путь трафика">
+          <div>📱 Приложения</div>
+          <div class="arr">↓</div>
+          <div class="me">🛡 Периметр — монитор, блокировки, DoH</div>
+          <div class="arr">↓</div>
+          <div>ByeDPI — прокси 127.0.0.1:1080</div>
+          <div class="arr">↓</div>
+          <div>🌐 Интернет</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Вопросы</div>
+        <h2>Честно о том, что можно и чего нельзя</h2>
+      </div>
+      <div class="faq">
+        <details class="reveal"><summary>Периметр видит мои сообщения и фото?</summary><p>Нет. Он видит, куда и сколько отправляет приложение, но не содержимое: трафик зашифрован. «Приложение ночью отправило 300 МБ на сервер, зарегистрированный месяц назад» — это факт, который Периметр покажет. Что именно было внутри, он не знает.</p></details>
+        <details class="reveal"><summary>Почему некоторые приложения ругаются на VPN?</summary><p>Для Android Периметр — это VPN, даже если весь трафик идёт напрямую. Некоторые банки и мессенджеры проверяют, включён ли VPN, и показывают предупреждение. Это их проверка, а не сбой Периметра.</p></details>
+        <details class="reveal"><summary>Можно запретить скриншоты в других приложениях?</summary><p>Без root Android этого не позволяет. Периметр находит приложения, которые могут тайно видеть экран через «Специальные возможности», и ведёт прямо в настройки, где у них можно забрать доступ.</p></details>
+        <details class="reveal"><summary>Пропал интернет — что делать?</summary><p>Если запросы перестали проходить дольше 20 секунд, Периметр сам выключит монитор, чтобы интернет работал, и пришлёт уведомление. Если такое повторяется, разреши Периметру мобильный интернет в фоне и отключи для него оптимизацию батареи.</p></details>
+        <details class="reveal"><summary>Что значит оценка «85 из 100»?</summary><p>Быстрый ориентир. Баллы снимаются за ночные выгрузки, молодые домены, приложения со «Специальными возможностями», доступ ко всем фото и выключенный монитор. 85 и выше — спокойно, 60–84 — стоит проверить, ниже 60 — опасно.</p></details>
+        <details class="reveal"><summary>Чего Периметр не поймает?</summary><p>Приложения, которые ходят по IP-адресу напрямую или через собственный зашифрованный DNS, монитор не увидит, но объём их ночной выгрузки всё равно попадёт в «Прошлую ночь». Пока включён другой VPN, кроме ByeDPI в режиме прокси, монитор на паузе.</p></details>
+        <details class="reveal"><summary>Почему нет в Play Маркете?</summary><p>Google строго ограничивает приложения, которые используют VPN и видят список всех установленных приложений. Периметр распространяется как APK, а его исходный код открыт для проверки: каждую строчку можно прочитать, а сборка идёт автоматически на GitHub из этого кода.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section id="changelog">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">Что нового</div>
+        <h2>История версий</h2>
+      </div>
+      <div class="log">
+        <div class="log-item reveal"><h3>0.5.2 <span class="pill p-ok">ПОСЛЕДНЯЯ</span></h3><ul><li>Страховка: если запросы перестали проходить, Периметр сам выключает монитор, чтобы интернет работал.</li><li>Подсказка, если телефон запрещает Периметру мобильный интернет в фоне.</li></ul></div>
+        <div class="log-item reveal"><h3>0.5.1</h3><ul><li>Запросы уходят сразу на несколько DNS-серверов, смена Wi-Fi ↔ мобильный больше не подвешивает интернет.</li></ul></div>
+        <div class="log-item reveal"><h3>0.5.0</h3><ul><li>Совместимость с ByeDPI: оба работают одновременно, DNS через DNS-over-HTTPS.</li></ul></div>
+        <div class="log-item reveal"><h3>0.4</h3><ul><li>Монитор держится в фоне, восстанавливается после выгрузки системой.</li><li>Запрос работы в фоне и уведомлений при первом запуске.</li></ul></div>
+        <div class="log-item reveal"><h3>0.3</h3><ul><li>Слежка за экраном, фильтры и поиск в мониторе, список правил блокировки.</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap reveal">
+      <h2>Посмотри, что творится<br>в твоём телефоне</h2>
+      <p>Бесплатно, без рекламы, без регистрации. Исходный код открыт для проверки на GitHub.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#" data-download>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Скачать APK <small data-version>v0.5.2</small>
+        </a>
+        <a class="btn btn-ghost" href="#" data-tg-link hidden>Канал в Telegram</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="year">2026</span> Периметр · все права защищены</span>
+    <nav aria-label="Ссылки">
+      <a href="#" data-repo-link>GitHub</a>
+      <a href="#" data-releases-link>Все версии</a>
+      <a href="#" data-issues-link>Сообщить об ошибке</a>
+      <a href="#" data-tg-link hidden>Telegram</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var REPO = "Wandraker/perimetr";
+  var TELEGRAM = "";
+  var gh = "https://github.com/" + REPO;
+  var apk = gh + "/releases/latest/download/perimetr.apk";
+
+  document.documentElement.classList.add("js");
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  document.querySelectorAll("[data-download]").forEach(function(a){ a.href = apk; });
+  document.querySelectorAll("[data-repo-link]").forEach(function(a){ a.href = gh; a.target = "_blank"; a.rel = "noopener"; });
+  document.querySelectorAll("[data-releases-link]").forEach(function(a){ a.href = gh + "/releases"; a.target = "_blank"; a.rel = "noopener"; });
+  document.querySelectorAll("[data-issues-link]").forEach(function(a){ a.href = gh + "/issues"; a.target = "_blank"; a.rel = "noopener"; });
+  if (TELEGRAM) {
+    document.querySelectorAll("[data-tg-link]").forEach(function(a){ a.href = TELEGRAM; a.hidden = false; a.target = "_blank"; a.rel = "noopener"; });
+  }
+
+  fetch("https://api.github.com/repos/" + REPO + "/releases/latest")
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!j || !j.tag_name) return;
+      var v = String(j.tag_name).replace(/^v/i, "");
+      document.querySelectorAll("[data-version]").forEach(function(el){
+        el.textContent = el.tagName === "SMALL" ? "v" + v : v;
+      });
+    })
+    .catch(function(){});
+
+  var nav = document.getElementById("nav");
+  var onScroll = function(){ nav.classList.toggle("scrolled", window.scrollY > 8); };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) { e.target.classList.remove("pending"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".reveal").forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if (r.top > window.innerHeight) { el.classList.add("pending"); io.observe(el); }
+    });
+  }
+
+  var events = [
+    { app: "Яндекс Клавиатура", ini: "Я", c: "#FF7E5C", dom: "report.appmetrica.yandex.net", pill: "ТРЕКЕР · СРЕЗАН", cls: "p-cut", row: "cut", cut: true },
+    { app: "Погода", ini: "П", c: "#4DD0E1", dom: "api.weather.com", pill: "НОРМА", cls: "p-ok" },
+    { app: "Сервисы Google Play", ini: "G", c: "#6EC1FF", dom: "app-measurement.com", pill: "ТРЕКЕР · СРЕЗАН", cls: "p-cut", row: "cut", cut: true },
+    { app: "Банк", ini: "Б", c: "#3DDC84", dom: "online.bank.example", pill: "НОРМА", cls: "p-ok" },
+    { app: "Фонарик+", ini: "Ф", c: "#FFD166", dom: "ads.applovin.com", pill: "ТРЕКЕР · СРЕЗАН", cls: "p-cut", row: "cut", cut: true },
+    { app: "Очиститель памяти", ini: "О", c: "#FF8A5C", dom: "img-sync-hk.top", pill: "ДОМЕНУ 40 ДН.", cls: "p-crit", row: "crit" },
+    { app: "Игра 3D", ini: "И", c: "#B388FF", dom: "telemetry.unityads.unity3d.com", pill: "ТРЕКЕР · СРЕЗАН", cls: "p-cut", row: "cut", cut: true },
+    { app: "Мессенджер", ini: "М", c: "#7C9CFF", dom: "api.messenger.example", pill: "НОРМА", cls: "p-ok" },
+    { app: "Соцсеть", ini: "С", c: "#FF7EB6", dom: "graph.facebook.com", pill: "ТРЕКЕР", cls: "p-warn" }
+  ];
+  var feed = document.getElementById("feed");
+  var req = 1284, cut = 41, i = 0;
+  var fmt = function(n){ return n.toLocaleString("ru-RU"); };
+  function rowEl(e){
+    var d = document.createElement("div");
+    d.className = "row" + (e.row ? " " + e.row : "");
+    d.innerHTML = '<span class="ico" style="background:' + e.c + '">' + e.ini + '</span>' +
+      '<span class="row-main"><span class="row-app">' + e.app + '</span><br><span class="row-dom">' + e.dom + '</span></span>' +
+      '<span class="pill ' + e.cls + '">' + e.pill + '</span>';
+    return d;
+  }
+  for (var k = 0; k < 6; k++) feed.appendChild(rowEl(events[(k + 3) % events.length]));
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduce) {
+    setInterval(function(){
+      var e = events[i++ % events.length];
+      feed.insertBefore(rowEl(e), feed.firstChild);
+      while (feed.children.length > 8) feed.removeChild(feed.lastChild);
+      req += 1 + Math.floor(Math.random() * 3);
+      if (e.cut) cut++;
+      document.getElementById("st-req").textContent = fmt(req);
+      document.getElementById("st-cut").textContent = fmt(cut);
+    }, 1900);
+  }
+})();
+</script>
+</body>
+</html>
