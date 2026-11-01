@@ -17,6 +17,7 @@ import com.perimetr.guard.data.DomainStat
 import com.perimetr.guard.data.Domains
 import com.perimetr.guard.data.Labels
 import com.perimetr.guard.data.NetStats
+import com.perimetr.guard.data.NightRules
 import com.perimetr.guard.data.Night
 import com.perimetr.guard.data.Owners
 import com.perimetr.guard.data.PermAudit
@@ -288,12 +289,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val photos = pkg in photoPkgs
             val young = rows.filter { it.young }
             val trusted = pkg in Rules.trustedApps
-            val level = when {
-                trusted -> Level.OK
-                photos && sent >= 5 * MB -> Level.CRIT
-                young.isNotEmpty() && sent >= MB -> Level.CRIT
-                sent >= 20 * MB || young.isNotEmpty() || (photos && sent >= MB) -> Level.WARN
-                else -> Level.OK
+            val level = when (NightRules.verdict(sent, photos, young.isNotEmpty(), trusted)) {
+                NightRules.Verdict.CRIT -> Level.CRIT
+                NightRules.Verdict.WARN -> Level.WARN
+                NightRules.Verdict.OK -> Level.OK
             }
             NightRow(pkg, labels.of(pkg), sent, photos, rows, level, trusted, reason(sent, photos, young, rows, trusted))
         }.filter { it.level != Level.OK || it.tx >= 5 * MB || it.trusted }
