@@ -12,6 +12,7 @@ import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.system.Os
 import android.system.OsConstants
 import com.perimetr.guard.MainActivity
@@ -19,6 +20,7 @@ import com.perimetr.guard.R
 import com.perimetr.guard.data.Db
 import com.perimetr.guard.data.Labels
 import com.perimetr.guard.data.Night
+import com.perimetr.guard.data.NightRules
 import com.perimetr.guard.data.Owners
 import com.perimetr.guard.data.Prefs
 import com.perimetr.guard.data.ProxyApps
@@ -456,12 +458,20 @@ class GuardVpnService : VpnService() {
             db.log(now, uid, pkg, domain, blocked)
         } catch (_: Exception) {
         }
-        if (fresh && Prefs.nightAlerts && Night.isNight(now) && Owners.isApp(pkg) && pkg !in Rules.trustedApps) {
+        if (fresh && Prefs.nightAlerts && Night.isNight(now) && Owners.isApp(pkg) && pkg !in Rules.trustedApps &&
+            !NightRules.quietDomain(domain) && !screenOn()
+        ) {
             val first = db.firstSeen(pkg)
             if (first != null && now - first > Night.DAY && alerted.putIfAbsent("$pkg|$domain", true) == null) {
                 Notifier.nightContact(this, Labels(this).of(pkg), domain, pkg)
             }
         }
+    }
+
+    private fun screenOn(): Boolean = try {
+        getSystemService(PowerManager::class.java)?.isInteractive ?: false
+    } catch (_: Exception) {
+        false
     }
 
     private fun ownerUid(q: DnsQuery): Int = try {
