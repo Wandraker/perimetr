@@ -77,6 +77,9 @@ class GuardVpnService : VpnService() {
     private val failedOpen = AtomicBoolean(false)
 
     @Volatile
+    private var startedAt = 0L
+
+    @Volatile
     private var upstreamCache: Triple<Long, Network?, List<InetAddress>> = Triple(0L, null, emptyList())
 
     override fun onCreate() {
@@ -91,6 +94,8 @@ class GuardVpnService : VpnService() {
         when (intent?.action) {
             ACTION_STOP -> {
                 Prefs.vpnWanted = false
+                Prefs.failStreak = 0
+                Revive.cancelResume(this)
                 shutdown()
                 stopSelf()
                 return START_NOT_STICKY
@@ -108,6 +113,7 @@ class GuardVpnService : VpnService() {
 
     override fun onRevoke() {
         Prefs.vpnWanted = false
+        Revive.cancelResume(this)
         shutdown()
         stopSelf()
     }
@@ -128,6 +134,9 @@ class GuardVpnService : VpnService() {
     }
 
     private fun start() {
+        goForeground(false)
+        if (Prefs.resumePending) Revive.cancelResume(this)
+        startedAt = System.currentTimeMillis()
         val db = Db.get(this)
         Rules.load(db)
         pool.execute { db.prune(System.currentTimeMillis() - 14 * Night.DAY) }
@@ -417,14 +426,17 @@ class GuardVpnService : VpnService() {
     }
 
     private fun health(ok: Boolean) {
+        val now = System.currentTimeMillis()
         if (ok) {
             dnsFails.set(0)
             failStreakStart = 0L
+            if (now - startedAt > 10 * 60_000L && Prefs.failStreak > 0) Prefs.failStreak = 0
             return
         }
-        val now = System.currentTimeMillis()
         if (dnsFails.incrementAndGet() == 1) failStreakStart = now
-        if (dnsFails.get() >= 15 && now - failStreakStart > 20_000 && networkUp() && failedOpen.compareAndSet(false, true)) {
+        if (dnsFails.get() >= 15 && now - failStreakStart > 20_000 && networkUp() && !deviceIdle() &&
+            failedOpen.compareAndSet(false, true)
+        ) {
             pool.execute { failOpen() }
         }
     }
@@ -442,7 +454,14 @@ class GuardVpnService : VpnService() {
         Prefs.lastFailOpen = System.currentTimeMillis()
         shutdown()
         Notifier.failOpen(this)
+        Revive.scheduleResume(this)
         stopSelf()
+    }
+
+    private fun deviceIdle(): Boolean = try {
+        getSystemService(PowerManager::class.java)?.isDeviceIdleMode ?: false
+    } catch (_: Exception) {
+        false
     }
 
     private fun record(uid: Int, pkg: String, domain: String, blocked: Boolean) {

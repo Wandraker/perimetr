@@ -40,6 +40,14 @@ object Prefs {
         get() = sp.getLong("last_fail_open", 0L)
         set(v) = sp.edit().putLong("last_fail_open", v).apply()
 
+    var resumePending: Boolean
+        get() = sp.getBoolean("resume_pending", false)
+        set(v) = sp.edit().putBoolean("resume_pending", v).apply()
+
+    var failStreak: Int
+        get() = sp.getInt("fail_streak", 0)
+        set(v) = sp.edit().putInt("fail_streak", v).apply()
+
     var proxyMode: Boolean
         get() = sp.getBoolean("proxy_mode", false)
         set(v) = sp.edit().putBoolean("proxy_mode", v).apply()

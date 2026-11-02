@@ -35,6 +35,7 @@ object WatchCheck {
 
 class WatchJob : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
+        Revive.run(applicationContext, markKill = true)
         Thread {
             WatchCheck.run(applicationContext)
             jobFinished(params, false)

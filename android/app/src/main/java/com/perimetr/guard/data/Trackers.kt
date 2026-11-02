@@ -7,6 +7,8 @@ object Trackers {
         "googleadservices.com",
         "google-analytics.com",
         "app-measurement.com",
+        "crashlytics.com",
+        "firebaselogging.googleapis.com",
         "adservice.google.com",
         "an.facebook.com",
         "appsflyer.com",

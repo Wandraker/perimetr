@@ -93,7 +93,7 @@ object Notifier {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val text = "Запросы к серверам перестали проходить, поэтому Периметр выключил монитор, чтобы интернет работал. Открой Периметр, чтобы узнать причину."
+        val text = "Запросы к серверам перестали проходить, поэтому Периметр выключил монитор, чтобы интернет работал. Через несколько минут он попробует включиться сам. Открой Периметр, чтобы узнать причину."
         val n = Notification.Builder(ctx, HEALTH_CHANNEL)
             .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle("Монитор выключен, интернет работает")
